@@ -19,13 +19,28 @@ model: opus
 {
   "ticket_path": "<티켓 절대경로, 필수>",
   "plan_path": "<plan.md 절대경로, 필수>",
-  "branch": "<현재 체크아웃되어야 할 브랜치명, 필수>"
+  "branch": "<현재 체크아웃되어야 할 브랜치명, 필수>",
+  "phase": "write | commit | full (선택, 기본 full)",
+  "verify_verdict": "PASS | FAIL | INCONCLUSIVE (선택, verify 체인에서 전달)"
 }
 ```
 
 필수 필드 누락 시 즉시 실패 응답(라우터 버그 신호) + 종료.
 
 `report_path` 는 `ticket_path` 에서 도출합니다 (아래 도출 규칙).
+
+## phase 처리 (2-phase 분리)
+
+`phase` 로 수행 범위를 나눕니다(`/finalize-impl` = 작성, `/commit-impl` = 커밋으로 분리 호출됨):
+
+| phase | 수행 | 스킵 |
+|-------|------|------|
+| `write` | Step 1~3 (변경 수집 → 모드 검증 → 보고서 작성). 커밋 안 함. | Step 4(커밋) |
+| `commit` | Step 4 (이미 작성된 `_report.md` 를 1커밋). | Step 1~3(작성) |
+| `full` (기본) | Step 1~4 전부 (단독 호출 시) | — |
+
+- `commit` phase: `_report.md` 가 이미 존재해야 함(없으면 중단·보고). 보고서 본문 재작성 금지, 커밋만.
+- `verify_verdict` 가 주어지면(verify 체인): `write` phase 의 §4 검증 표에 `자동 검증 판정 | <verdict>` 행을 추가하고, FAIL/INCONCLUSIVE 라도 보고서는 그대로 작성한다(판정은 정직히 기록).
 
 ## 사전 점검 (실패 시 즉시 중단)
 
@@ -195,7 +210,9 @@ API 호출부터 내부 함수 호출 순서까지 번호로 기술.
 
 > "사용자 검증" 행의 날짜는 환경 제공 `currentDate` 를 사용하고 결과는 **완료**로 미리 채운다 (이미 검증 통과 상태로 호출되었으므로).
 
-### 4. 보고서 커밋 (단일 커밋, push 금지)
+### 4. 보고서 커밋 (단일 커밋, push 금지) — `phase: write` 이면 스킵
+
+> `phase: write` 인 경우 이 단계를 **수행하지 않고** 종료한다(보고서 작성까지만). 커밋은 후속 `commit` phase 호출이 담당.
 
 test/impl 커밋은 이미 backend_engineer / frontend_engineer 가 처리했으므로 이 단계는 **보고서 1커밋만** 수행.
 

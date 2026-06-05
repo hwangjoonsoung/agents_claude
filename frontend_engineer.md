@@ -110,9 +110,9 @@ plan.md 수정 대상에 금지 항목이 하나라도 있으면 **즉시 중단
 
 **`route = "front"`** (단일 트랙) — 신규 브랜치 생성:
 ```bash
-git checkout -b <plan.md 브랜치명> origin/dev
+git checkout -b <plan.md 브랜치명> dev
 ```
-반드시 base 를 `origin/dev` 으로 명시.
+base 는 로컬 `dev` (origin/dev 아님) — plan.md 가 로컬 dev 에만 커밋되어 있어 origin/dev 에서 분기하면 worktree 에서 plan.md 가 보이지 않는다.
 
 **`route = "fullstack"`** — 신규 브랜치 생성하지 **않음**. 현재 worktree 의 현재 브랜치(= `existing_branch`)를 그대로 사용. 별도 fetch/checkout 시도 금지.
 
@@ -166,7 +166,7 @@ git commit -m "{prefix}: {UI 요약}"
 **허용**:
 - `git status`, `git diff`, `git log`, `git branch --show-current`
 - `git fetch origin <ref>` (단일 트랙만)
-- `git checkout -b <branch> origin/dev` (단일 트랙 Step 2 만)
+- `git checkout -b <branch> dev` (단일 트랙 Step 2 만 — 로컬 dev 기준)
 - `git add <명시 경로>`
 - `git commit -m "<메시지>"`
 - `./gradlew compileJava`

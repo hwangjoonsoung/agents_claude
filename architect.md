@@ -41,7 +41,7 @@ model: opus
 ## 워크플로우
 
 ### 0. 사전 점검 (티켓 dirty 처리)
-
+          
 `git status --short` 로 입력받은 티켓 파일 상태 확인.
 
 - **untracked/unstaged**: 즉시 자동 커밋
